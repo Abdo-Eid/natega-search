@@ -1,0 +1,20 @@
+{
+  "name": "natega-search",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "setup": "node setup.js"
+  },
+  "author": "AbdulHamed Samy Eid",
+"license": "CC-BY-NC-4.0",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cheerio": "^1.1.2",
+    "csv-parser": "^3.2.0",
+    "express": "^5.1.0",
+    "node-fetch": "^2.7.0",
+    "sqlite3": "^5.1.7"
+  }
+}

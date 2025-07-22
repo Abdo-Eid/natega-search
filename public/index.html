@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>بحث باسم الطالب</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
+            rel="stylesheet"
+        />
+        <style>
+            #popup {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+            #popupContent {
+                background: white;
+                padding: 20px;
+                max-height: 90vh;
+                max-width: 90vw;
+                overflow-y: auto;
+                border-radius: 8px;
+                position: relative;
+            }
+            #closePopup {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: #dc3545;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            .resultItem {
+                display: flex;
+                justify-content: space-between;
+                padding: 6px 12px;
+                border-bottom: 1px solid #dee2e6;
+                font-size: 1rem;
+            }
+
+            .resultItem span.formatt2 {
+                font-weight: 500;
+                color: #333;
+                flex: 1;
+            }
+
+            .resultItem span.formatt4 {
+                font-weight: bold;
+                color: #007bff;
+                flex: 0 0 auto;
+                margin-right: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container mt-5">
+            <h1 class="mb-4">البحث باسم الطالب</h1>
+            <input
+                type="text"
+                id="searchInput"
+                class="form-control mb-3"
+                placeholder="أدخل اسم الطالب..."
+                dir="rtl"
+            />
+            <div id="results" class="list-group"></div>
+        </div>
+
+        <div id="popup">
+            <div id="popupContent">
+                <button id="closePopup">X</button>
+                <div id="popupBody">جارٍ التحميل...</div>
+            </div>
+        </div>
+
+        <script>
+            const searchInput = document.getElementById("searchInput");
+            const resultsDiv = document.getElementById("results");
+            const popup = document.getElementById("popup");
+            const popupBody = document.getElementById("popupBody");
+            const closePopup = document.getElementById("closePopup");
+
+            function debounce(func, delay) {
+                let timer;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            const fetchData = debounce(() => {
+                const query = searchInput.value;
+                if (query.length < 2) {
+                    resultsDiv.innerHTML = "";
+                    return;
+                }
+
+                fetch(`/search?q=${encodeURIComponent(query)}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        resultsDiv.innerHTML = "";
+                        if (data.length === 0) {
+                            resultsDiv.innerHTML =
+                                '<div class="list-group-item">لا توجد نتائج</div>';
+                            return;
+                        }
+
+                        data.forEach((item) => {
+                            const div = document.createElement("div");
+                            div.className =
+                                "list-group-item list-group-item-action";
+                            div.innerHTML = `<strong>${item.arabic_name}</strong><br>
+                             رقم الجلوس: ${item.seating_no}<br>
+                             المجموع: ${item.total_degree}`;
+                            div.addEventListener("click", () =>
+                                fetchStudentResult(item.seating_no)
+                            );
+                            resultsDiv.appendChild(div);
+                        });
+                    });
+            }, 300);
+
+            async function fetchStudentResult(seatingNo) {
+                popup.style.display = "flex";
+                popupBody.innerHTML = "جارٍ التحميل...";
+
+                try {
+                    const res = await fetch("/student-result", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            seating_no: seatingNo,
+                            system: "1",
+                        }),
+                    });
+
+                    const html = await res.text();
+                    popupBody.innerHTML = html;
+                } catch (err) {
+                    popupBody.innerHTML = "حدث خطأ أثناء جلب النتيجة.";
+                    console.error("Fetch error:", err);
+                }
+            }
+
+            closePopup.addEventListener("click", () => {
+                popup.style.display = "none";
+                popupBody.innerHTML = "";
+            });
+
+            searchInput.addEventListener("input", fetchData);
+        </script>
+    </body>
+</html>
