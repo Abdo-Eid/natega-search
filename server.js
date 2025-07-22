@@ -75,7 +75,7 @@ app.post("/student-result", async (req, res) => {
             body: formData.toString(),
         });
         const html = await response.text();
-        console.log('Fetched HTML:', html.slice(0, 2000)); // log part of it
+        // console.log('Fetched HTML:', html.slice(0, 2000)); // log part of it
 
         const $ = cheerio.load(html);
 
