@@ -54,61 +54,76 @@ app.get("/search", (req, res) => {
     });
 });
 
+app.post("/student-result", async (req, res) => {
+    const { seating_no, system } = req.body;
 
-app.post('/student-result', async (req, res) => {
-  const { seating_no, system } = req.body;
+    try {
+        // 1. Fetch raw HTML
+        const formData = new URLSearchParams({
+            seating_no,
+            system: system || "2",
+        });
+        const response = await fetch("https://natega.youm7.com/Home/Natega", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+                Referer: "https://natega.youm7.com/",
+                Origin: "https://natega.youm7.com",
+            },
+            body: formData.toString(),
+        });
+        const html = await response.text();
+        console.log('Fetched HTML:', html.slice(0, 2000)); // log part of it
 
-  try {
-    // 1. Fetch raw HTML
-    const formData = new URLSearchParams({ seating_no, system: system || '2' });
-    const response = await fetch('https://natega.youm7.com/Home/Natega', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData.toString()
-    });
-    const html = await response.text();
-    // console.log(html)
-    const $ = cheerio.load(html);
+        const $ = cheerio.load(html);
 
-    // 2. Main metadata block: first .RightSide under .Sitecontainer .all, or fallback to any .RightSide
-    let rightSide = $('.Sitecontainer.WebSiteContent .all .RightSide').first();
-    if (!rightSide.length) rightSide = $('.RightSide').first();
-    const metaHTML = rightSide.html() || '';
+        // 2. Main metadata block: first .RightSide under .Sitecontainer .all, or fallback to any .RightSide
+        let rightSide = $(
+            ".Sitecontainer.WebSiteContent .all .RightSide"
+        ).first();
+        if (!rightSide.length) rightSide = $(".RightSide").first();
+        const metaHTML = rightSide.html() || "";
 
-    // 3. Grades block: look inside the nearest .result-info for the first .RightSide2
-    const resultInfo = $('.Sitecontainer.WebSiteContent .result-info').first();
-    const gradesBlock = resultInfo.find('> .RightSide2, .RightSide2').first();
-    const gradesHTML = gradesBlock.html() || '';
+        // 3. Grades block: look inside the nearest .result-info for the first .RightSide2
+        const resultInfo = $(
+            ".Sitecontainer.WebSiteContent .result-info"
+        ).first();
+        const gradesBlock = resultInfo
+            .find("> .RightSide2, .RightSide2")
+            .first();
+        const gradesHTML = gradesBlock.html() || "";
 
-    // 4. “مواد اخرى” block: find the header then its next .result-details, picking only the inner .RightSide2 list
-    const extraHeader = resultInfo.find('.halfinput-info').filter((i, el) => {
-      return $(el).text().trim().includes('مواد اخرى');
-    }).first();
+        // 4. “مواد اخرى” block: find the header then its next .result-details, picking only the inner .RightSide2 list
+        const extraHeader = resultInfo
+            .find(".halfinput-info")
+            .filter((i, el) => {
+                return $(el).text().trim().includes("مواد اخرى");
+            })
+            .first();
 
-    let extraHTML = '';
-    if (extraHeader.length) {
-      const details = extraHeader.nextAll('.result-details').first();
-      // inside details, pick only the <ul class="nav-pills"> (skip ads/scripts)
-      const list = details.find('ul.nav-pills').first();
-      extraHTML = list.parent().html() || '';
-    }
+        let extraHTML = "";
+        if (extraHeader.length) {
+            const details = extraHeader.nextAll(".result-details").first();
+            // inside details, pick only the <ul class="nav-pills"> (skip ads/scripts)
+            const list = details.find("ul.nav-pills").first();
+            extraHTML = list.parent().html() || "";
+        }
 
-    // 5. Compose cleaned output
-    const cleaned = `
+        // 5. Compose cleaned output
+        const cleaned = `
       <div class="RightSide">${metaHTML}</div>
       <div class="RightSide2">${gradesHTML}</div>
       <div class="halfinput-info"><h6>مواد اخرى</h6></div>
       <div class="result-details">${extraHTML}</div>
     `;
 
-    res.send(cleaned);
-  }
-  catch (err) {
-    res.status(500).json({ error: 'Failed to fetch or process result.' });
-  }
+        res.send(cleaned);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch or process result." });
+    }
 });
-
-
 
 app.listen(PORT, () => {
     console.log(`Server running on port: ${PORT}`);
