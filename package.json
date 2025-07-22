@@ -8,12 +8,13 @@
     "setup": "node setup.js"
   },
   "author": "AbdulHamed Samy Eid",
-"license": "CC-BY-NC-4.0",
+  "license": "CC-BY-NC-4.0",
   "dependencies": {
     "body-parser": "^2.2.0",
     "cheerio": "^1.1.2",
     "csv-parser": "^3.2.0",
     "express": "^5.1.0",
+    "follow-redirects": "^1.15.9",
     "node-fetch": "^2.7.0",
     "sqlite3": "^5.1.7"
   }

@@ -1,8 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const csv = require('csv-parser');
-const https = require('https');
-const { pipeline } = require('stream');
+const { https } = require('follow-redirects');
 
 // 🔁 Reset database file
 if (fs.existsSync('./students.db')) {
