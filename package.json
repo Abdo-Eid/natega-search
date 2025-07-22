@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node setup.js && node server.js",
+    "start": "node setup.js && node server.js"
   },
   "author": "AbdulHamed Samy Eid",
   "license": "CC-BY-NC-4.0",
