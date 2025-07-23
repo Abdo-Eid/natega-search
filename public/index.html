@@ -1,164 +1,431 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>بحث باسم الطالب</title>
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
-            rel="stylesheet"
-        />
-        <style>
-            #popup {
-                position: fixed;
-                top: 0;
-                right: 0;
-                bottom: 0;
-                left: 0;
-                background: rgba(0, 0, 0, 0.5);
-                display: none;
-                justify-content: center;
-                align-items: center;
-                z-index: 9999;
-            }
-            #popupContent {
-                background: white;
-                padding: 20px;
-                max-height: 90vh;
-                max-width: 90vw;
-                overflow-y: auto;
-                border-radius: 8px;
-                position: relative;
-            }
-            #closePopup {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                background: #dc3545;
-                color: white;
-                border: none;
-                padding: 5px 10px;
-                border-radius: 5px;
-                cursor: pointer;
-            }
-            .resultItem {
-                display: flex;
-                justify-content: space-between;
-                padding: 6px 12px;
-                border-bottom: 1px solid #dee2e6;
-                font-size: 1rem;
-            }
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>بحث باسم الطالب</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet"/>
 
-            .resultItem span.formatt2 {
-                font-weight: 500;
-                color: #333;
-                flex: 1;
-            }
+    <style>
+        /* Custom styles for background and polka dots */
+        body {
+            font-family: 'Cairo', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            /* Removed overflow: hidden; from body */
+        }
 
-            .resultItem span.formatt4 {
-                font-weight: bold;
-                color: #007bff;
-                flex: 0 0 auto;
-                margin-right: 10px;
-            }
-        </style>
-    </head>
-    <body>
-        <h5>تم صنع هذه الصفحه بواسطة عبدالحميد سامي وهذا لينك github <a href="https://github.com/Abdo-Eid">Abdo-Eid</a></h5>
-        <div class="container mt-5">
-            <h1 class="mb-4">البحث باسم الطالب</h1>
-            <input
-                type="text"
-                id="searchInput"
-                class="form-control mb-3"
-                placeholder="أدخل اسم الطالب..."
-                dir="rtl"
-            />
-            <div id="results" class="list-group"></div>
-        </div>
+        .background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(173, 216, 230, 0.2); /* Light blue tint */
+            z-index: -1;
+        }
 
-        <div id="popup">
-            <div id="popupContent">
-                <button id="closePopup">X</button>
-                <div id="popupBody">جارٍ التحميل...</div>
+        .polka-dot-circle {
+            border-radius: 50%;
+            border: 2px solid black;
+            background-size: 15px 15px; /* Size of the polka dot grid */
+            background-image: radial-gradient(circle, black 20%, transparent 20%),
+                              radial-gradient(circle, black 20%, transparent 20%);
+            background-position: 0 0, 7.5px 7.5px; /* Offset for staggered dots */
+            z-index: 0; /* Below content, above background */
+        }
+
+        /* Specific colors for circles */
+        .polka-yellow { background-color: #FFC107; }
+        .polka-red { background-color: #DC3545; }
+        .polka-blue { background-color: #007BFF; }
+
+        /* Style for the scrollable search results container */
+        #results {
+            max-height: 500px; /* Or a suitable height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            padding-right: 8px; /* Add some padding for the scrollbar */
+        }
+
+        /* Custom scrollbar for search results */
+        #results::-webkit-scrollbar {
+            width: 8px;
+        }
+        #results::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        #results::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        #results::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Custom scrollbar for popup content */
+        #popupInnerContent::-webkit-scrollbar { /* Targeted the specific div where content is loaded */
+            width: 8px;
+        }
+        #popupInnerContent::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        #popupInnerContent::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        #popupInnerContent::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Styling for the dashed border and handles inside the popup */
+        .popup-card-content {
+            position: relative;
+            border: 1px dashed #333; /* Dashed border */
+            padding: 2rem; /* Adjusted padding to accommodate handles */
+            display: flex; /* Use flexbox for the main columns */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 1.5rem; /* Space between the main sections */
+            direction: rtl; /* Ensure right-to-left layout for content */
+            text-align: right; /* Default text alignment */
+        }
+
+    .RightSide, .RightSide2 {
+        flex: 1; /* Allow these sections to grow */
+        min-width: 300px; /* Minimum width before wrapping */
+        border: 1px solid #ddd; /* Example border */
+        border-radius: 0.5rem; /* Rounded corners */
+        background-color: #fcfcfc; /* Slightly off-white background */
+        padding-bottom: 1rem; /* Padding at the bottom */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Subtle shadow */
+    }
+
+    /* Adjust flex basis for specific layouts if needed, e.g., for two columns */
+    @media (min-width: 768px) {
+        .RightSide {
+            flex-basis: 55%; /* Right side might be wider */
+        }
+        .RightSide2 {
+            flex-basis: calc(45% - 1.5rem); /* Left side */
+        }
+        /* For the 'other materials' section, make it full width */
+        #popupBody > .halfinput-info:nth-of-type(2), /* Targeting the 3rd section header */
+        #popupBody > .result-details:last-of-type { /* Targeting the last result details */
+             flex-basis: 100%;
+        }
+    }
+
+    .halfinput-student, .halfinput-info {
+        background-color: #007bff; /* Blue header background */
+        color: white;
+        padding: 0.75rem 1.5rem;
+        text-align: center;
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        border-top-left-radius: 0.5rem; /* Match parent container radius */
+        border-top-right-radius: 0.5rem;
+    }
+
+    .halfinput-info {
+        background-color: #6c757d; /* Different color for 'other info' headers */
+        font-size: 1.1rem;
+    }
+
+    .data-result, .full-result, .result-details {
+        padding: 0 1.5rem; /* Padding inside these sections */
+        margin-bottom: 1rem;
+    }
+
+    .halfinput-result {
+        padding-top: 1rem;
+    }
+
+    /* Styling for Bootstrap-like nav-pills as list of items */
+    .nav-pills {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .nav-pills .resultItem {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px dashed #eee; /* Dashed separator for items */
+    }
+
+    .nav-pills .resultItem:last-child {
+        border-bottom: none; /* No border for the last item */
+    }
+
+    /* Specific result item layout for the top three stats */
+    .data-result .nav-pills {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around; /* Distribute items */
+        text-align: center;
+    }
+
+    .data-result .nav-pills .resultItem {
+        flex: 1 1 30%; /* Three items per row, or wrap */
+        border-bottom: none; /* No bottom border here */
+        padding: 0.5rem;
+        flex-direction: column; /* Stack span and h1 vertically */
+        align-items: center; /* Center content */
+    }
+
+    .data-result .nav-pills .resultItem h1 {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #007bff;
+        margin-top: 0.25rem;
+    }
+
+
+    /* Font formatting classes for text */
+    .formatt, .formatt2, .formatt3, .formatt4 {
+        font-size: 1rem;
+        color: #333;
+        font-weight: normal;
+    }
+
+    .formatt {
+        font-weight: bold; /* Bold for labels like "الأسم:" */
+        color: #555;
+    }
+
+    .formatt2 {
+        font-weight: 500; /* Medium weight for subject names */
+        color: #444;
+    }
+
+    .formatt3 {
+        font-size: 0.9rem; /* Smaller for descriptions like "رقم الجلوس" */
+        color: #777;
+    }
+
+    .formatt4 {
+        font-size: 1.1rem; /* Larger for actual scores */
+        font-weight: bold;
+        color: #007bff; /* Blue for scores */
+    }
+
+
+    /* Specific adjustment to allow the handles to be visible around the dashed border */
+    #popupInnerContent {
+        padding-top: 4.5rem; /* More space for top handle/rotate */
+        padding-bottom: 2.5rem; /* More space for bottom handle */
+        padding-left: 2.5rem; /* More space for left handle */
+        padding-right: 2.5rem; /* More space for right handle */
+    }
+
+    /* Ensure close button is styled */
+    #closePopup {
+        position: absolute; /* Already absolute in your HTML */
+        top: 1rem;
+        left: 1rem;
+        font-size: 2rem; /* Larger X */
+        color: #666;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        z-index: 60; /* Higher than other popup elements */
+        /* Make sure the material-icons is linked in your head if you use `close` icon */
+    }
+
+    #closePopup:hover {
+        color: #333;
+    }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Background Image and Overlay -->
+    <div class="background-wrapper"></div>
+    <div class="background-overlay"></div>
+
+    <!-- Decorative Polka Dot Circles -->
+    <!-- Added 'hidden' by default and 'md:block' to show on medium screens and up -->
+    <div class="polka-dot-circle polka-yellow absolute w-40 h-40 -top-10 left-20 transform translate-x-10 hidden lg:block"></div>
+    <div class="polka-dot-circle polka-red absolute w-52 h-52 top-60 -right-10 transform translate-y-1/2"></div>
+    <div class="polka-dot-circle polka-blue absolute w-48 h-48 bottom-10 left-10"></div>
+
+    <!-- Main Content Container -->
+    <div class="container mx-auto p-4 md:p-8 relative z-10">
+        <header class="text-center text-sm text-gray-600 mb-8">
+            <!-- Increased text size, changed color, added padding-y and margin-bottom -->
+            <span class="text-xl md:text-2xl text-stone-800 font-extrabold block mb-2">تم صنع هذه الصفحة بواسطة عبدالحميد سامي</span>
+            <a class="text-blue-700 hover:underline font-semibold text-lg" href="https://github.com/Abdo-Eid" rel="noopener noreferrer" target="_blank">GitHub: Abdo-Eid</a>
+        </header>
+
+        <main class="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-xl border border-gray-300">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-6">البحث باسم الطالب</h1>
+            <div class="relative flex items-center mb-6">
+                <input class="w-full pl-12 pr-4 py-3 text-lg text-right border-2 border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition" id="searchInput" placeholder="أدخل اسم الطالب..." type="text"/>
+            </div>
+            <!-- The 'results' div now has max-height and overflow-y-auto -->
+            <div class="mt-6 space-y-4" id="results">
+                <!-- Search results will appear here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Popup / Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50" id="popup">
+        <div class="bg-white rounded-lg shadow-2xl border border-gray-900 w-11/12 md:w-3/4 lg:w-1/2 max-w-4xl relative max-h-[90vh] overflow-y-hidden transform scale-95 transition-transform duration-300 ease-out" id="popupInnerContainer">
+            <!-- Close button moved to align with the design's "X" on the left -->
+            <button class="absolute top-4 left-4 text-gray-600 hover:text-gray-900 z-20" id="closePopup">
+                <span class="text-3xl text-red-500">❌</span>
+            </button>
+            <div class="popup-card-content p-8 md:p-12 relative overflow-y-auto max-h-[calc(90vh-8rem)]" id="popupInnerContent">
+
+                <!-- Content Placeholder -->
+                <div class="text-center text-lg text-gray-500">جارٍ التحميل...</div>
             </div>
         </div>
+    </div>
 
-        <script>
-            const searchInput = document.getElementById("searchInput");
-            const resultsDiv = document.getElementById("results");
-            const popup = document.getElementById("popup");
-            const popupBody = document.getElementById("popupBody");
-            const closePopup = document.getElementById("closePopup");
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const resultsContainer = document.getElementById('results');
+        const popup = document.getElementById('popup');
+        const popupInnerContainer = document.getElementById('popupInnerContainer'); // Reference for animation
+        const closePopupButton = document.getElementById('closePopup');
+        const popupInnerContent = document.getElementById('popupInnerContent'); // This is where fetched content goes
+        // const searchButton = document.getElementById('searchButton'); // This button doesn't exist in your HTML
 
-            function debounce(func, delay) {
-                let timer;
-                return (...args) => {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => func.apply(this, args), delay);
-                };
+        // Original debounce function
+        function debounce(func, delay) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        // Function to render search results from fetched data
+        const renderSearchResults = (data) => {
+            resultsContainer.innerHTML = '';
+            if (data.length === 0) {
+                resultsContainer.innerHTML = `<div class="bg-white p-4 rounded-lg shadow text-center text-gray-500 border border-gray-200">لا توجد نتائج</div>`;
+                return;
             }
 
-            const fetchData = debounce(() => {
-                const query = searchInput.value;
-                if (query.length < 2) {
-                    resultsDiv.innerHTML = "";
-                    return;
-                }
-
-                fetch(`/search?q=${encodeURIComponent(query)}`)
-                    .then((response) => response.json())
-                    .then((data) => {
-                        resultsDiv.innerHTML = "";
-                        if (data.length === 0) {
-                            resultsDiv.innerHTML =
-                                '<div class="list-group-item">لا توجد نتائج</div>';
-                            return;
-                        }
-
-                        data.forEach((item) => {
-                            const div = document.createElement("div");
-                            div.className =
-                                "list-group-item list-group-item-action";
-                            div.innerHTML = `<strong>${item.arabic_name}</strong><br>
-                             رقم الجلوس: ${item.seating_no}<br>
-                             المجموع: ${item.total_degree}`;
-                            div.addEventListener("click", () =>
-                                fetchStudentResult(item.seating_no)
-                            );
-                            resultsDiv.appendChild(div);
-                        });
-                    });
-            }, 300);
-
-            async function fetchStudentResult(seatingNo) {
-                popup.style.display = "flex";
-                popupBody.innerHTML = "جارٍ التحميل...";
-
-                try {
-                    const res = await fetch("/student-result", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            seating_no: seatingNo,
-                            system: "1",
-                        }),
-                    });
-
-                    const html = await res.text();
-                    popupBody.innerHTML = html;
-                } catch (err) {
-                    popupBody.innerHTML = "حدث خطأ أثناء جلب النتيجة.";
-                    console.error("Fetch error:", err);
-                }
-            }
-
-            closePopup.addEventListener("click", () => {
-                popup.style.display = "none";
-                popupBody.innerHTML = "";
+            data.forEach((item) => {
+                const div = document.createElement("div");
+                div.className = "bg-white p-4 rounded-lg shadow cursor-pointer hover:bg-gray-50 transition border border-gray-200";
+                div.innerHTML = `
+                    <p class="font-bold text-lg text-gray-900">${item.arabic_name}</p>
+                    <p class="text-gray-700 mt-1">رقم الجلوس: <span class="font-semibold">${item.seating_no}</span></p>
+                    <p class="text-gray-700">المجموع: <span class="font-semibold">${item.total_degree}</span></p>
+                `;
+                div.addEventListener("click", () => fetchStudentResult(item.seating_no));
+                resultsContainer.appendChild(div);
             });
+        };
 
-            searchInput.addEventListener("input", fetchData);
-        </script>
-    </body>
+        // Debounced function to fetch search results
+        const fetchData = debounce(() => {
+            const query = searchInput.value.trim();
+            if (query.length < 2) {
+                resultsContainer.innerHTML = "";
+                return;
+            }
+
+            // Show a loading indicator if needed
+            resultsContainer.innerHTML = `<div class="bg-white p-4 rounded-lg shadow text-center text-gray-500 border border-gray-200">جارٍ البحث...</div>`;
+
+            fetch(`/search?q=${encodeURIComponent(query)}`)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    renderSearchResults(data);
+                })
+                .catch((error) => {
+                    console.error("Fetch error for search:", error);
+                    resultsContainer.innerHTML = `<div class="bg-white p-4 rounded-lg shadow text-center text-red-500 border border-gray-200">حدث خطأ أثناء جلب نتائج البحث.</div>`;
+                });
+        }, 300); // 300ms debounce
+
+        // Async function to fetch and display single student result
+        async function fetchStudentResult(seatingNo) {
+            popup.classList.remove('hidden');
+            popupInnerContainer.classList.remove('scale-95');
+            popupInnerContainer.classList.add('scale-100');
+
+            // Set initial loading content, preserving handles/rotate icon
+            popupInnerContent.innerHTML = `
+                <div class="handle handle-top-left"></div>
+                <div class="handle handle-top-right"></div>
+                <div class="handle handle-bottom-left"></div>
+                <div class="handle handle-bottom-right"></div>
+                <div class="handle handle-middle-top"></div>
+                <div class="handle handle-middle-bottom"></div>
+                <div class="handle handle-middle-left"></div>
+                <div class="handle handle-middle-right"></div>
+                <div class="rotate-handle">↻</div>
+                <div class="text-center text-lg text-gray-500">جارٍ التحميل...</div>
+            `;
+
+            try {
+                const res = await fetch("/student-result", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        seating_no: seatingNo,
+                        system: "1",
+                    }),
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+
+                const html = await res.text();
+
+                // Inject fetched HTML, maintaining handles and adding placeholder lines
+                popupInnerContent.innerHTML = html;
+            } catch (err) {
+                console.error("Fetch error for student result:", err);
+                popupInnerContent.innerHTML = `<div class="text-center text-red-500">حدث خطأ أثناء جلب النتيجة.</div>`;
+            }
+        }
+
+        // Close popup functionality
+        closePopupButton.addEventListener("click", () => {
+            popupInnerContainer.classList.remove('scale-100');
+            popupInnerContainer.classList.add('scale-95');
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                popupInnerContent.innerHTML = ''; // Clear content on close
+            }, 300); // Match animation duration
+        });
+
+        // Close popup when clicking outside the content box
+        popup.addEventListener('click', (e) => {
+            // Check if the click occurred directly on the popup overlay, not its children
+            if (e.target === popup) {
+                popupInnerContainer.classList.remove('scale-100');
+                popupInnerContainer.classList.add('scale-95');
+                setTimeout(() => {
+                    popup.classList.add('hidden');
+                    popupInnerContent.innerHTML = ''; // Clear content on close
+                }, 300); // Match animation duration
+            }
+        });
+
+        // Event listeners for search
+        searchInput.addEventListener("input", fetchData);
+        // searchButton.addEventListener("click", fetchData); // This line was problematic as searchButton doesn't exist
+    </script>
+</body>
 </html>

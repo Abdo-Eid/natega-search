@@ -84,6 +84,7 @@ app.post("/student-result", async (req, res) => {
             ".Sitecontainer.WebSiteContent .all .RightSide"
         ).first();
         if (!rightSide.length) rightSide = $(".RightSide").first();
+        rightSide.find("div.icon").remove();
         const metaHTML = rightSide.html() || "";
 
         // 3. Grades block: look inside the nearest .result-info for the first .RightSide2
@@ -115,8 +116,8 @@ app.post("/student-result", async (req, res) => {
         const cleaned = `
       <div class="RightSide">${metaHTML}</div>
       <div class="RightSide2">${gradesHTML}</div>
-      <div class="halfinput-info"><h6>مواد اخرى</h6></div>
-      <div class="result-details">${extraHTML}</div>
+      <div><h6 class="halfinput-info">مواد اخرى</h6>
+      <div class="result-details">${extraHTML}</div></div>
     `;
 
         res.send(cleaned);
